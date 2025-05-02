@@ -1,0 +1,122 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <title>Data Mahasiswa</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+</head>
+
+<body class="bg-gray-100 p-6">
+    <div class="max-w-4xl mx-auto bg-white p-6 rounded shadow">
+        <h1 class="text-2xl font-bold mb-4">Data Mahasiswa</h1>
+
+        <!-- Form -->
+        <form id="mahasiswa-form" class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
+            <input type="hidden" id="mahasiswa-id">
+            <input type="text" id="npm" placeholder="NPM" class="border p-2 rounded" required>
+            <input type="text" id="nama" placeholder="Nama" class="border p-2 rounded" required>
+            <input type="text" id="jurusan" placeholder="Jurusan" class="border p-2 rounded" required>
+            <input type="number" id="tahunMasuk" placeholder="Tahun Masuk" class="border p-2 rounded" required>
+            <input type="text" id="kelas" placeholder="Kelas" class="border p-2 rounded" required>
+            <button type="submit" class="col-span-1 md:col-span-2 bg-blue-600 text-white p-2 rounded">Simpan</button>
+        </form>
+
+        <!-- Table -->
+        <table class="w-full table-auto border">
+            <thead>
+                <tr class="bg-gray-200">
+                    <th class="p-2 border">NPM</th>
+                    <th class="p-2 border">Nama</th>
+                    <th class="p-2 border">Jurusan</th>
+                    <th class="p-2 border">Tahun Masuk</th>
+                    <th class="p-2 border">Kelas</th>
+                    <th class="p-2 border">Aksi</th>
+                </tr>
+            </thead>
+            <tbody id="mahasiswa-table"></tbody>
+        </table>
+    </div>
+
+    <script>
+        const form = document.getElementById('mahasiswa-form');
+        const tableBody = document.getElementById('mahasiswa-table');
+        const API_URL = 'http://localhost:5000/api/mahasiswa';
+
+        const loadMahasiswa = async () => {
+            const res = await fetch(API_URL);
+            const data = await res.json();
+            tableBody.innerHTML = '';
+            data.forEach(mhs => {
+                console.log(mhs);
+                console.log(JSON.stringify(mhs));
+                tableBody.innerHTML += `
+          <tr class="border">
+            <td class="p-2 border">${mhs.npm}</td>
+            <td class="p-2 border">${mhs.nama}</td>
+            <td class="p-2 border">${mhs.jurusan}</td>
+            <td class="p-2 border">${mhs.tahunMasuk}</td>
+            <td class="p-2 border">${mhs.kelas}</td>
+            <td class="p-2 border text-center space-x-2">
+              <button onclick='editMahasiswa(${JSON.stringify(mhs)})' class="bg-yellow-400 text-white px-2 py-1 rounded">Edit</button>
+              <button onclick='deleteMahasiswa(${mhs.id})' class="bg-red-600 text-white px-2 py-1 rounded">Hapus</button>
+            </td>
+          </tr>
+        `;
+            });
+        };
+
+        const editMahasiswa = (mhs) => {
+            document.getElementById('mahasiswa-id').value = mhs.id;
+            document.getElementById('npm').value = mhs.npm;
+            document.getElementById('nama').value = mhs.nama;
+            document.getElementById('jurusan').value = mhs.jurusan;
+            document.getElementById('tahunMasuk').value = mhs.tahunMasuk;
+            document.getElementById('kelas').value = mhs.kelas;
+        };
+
+        const deleteMahasiswa = async (id) => {
+            if (confirm('Yakin ingin menghapus data ini?')) {
+                await fetch(`${API_URL}/${id}`, { method: 'DELETE' });
+                loadMahasiswa();
+            }
+        };
+
+        form.addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const id = document.getElementById('mahasiswa-id').value;
+            const payload = {
+                npm: document.getElementById('npm').value,
+                nama: document.getElementById('nama').value,
+                jurusan: document.getElementById('jurusan').value,
+                tahunMasuk: parseInt(document.getElementById('tahunMasuk').value),
+                kelas: document.getElementById('kelas').value
+            };
+
+            if (id) {
+                // Update
+                await fetch(`${API_URL}/${id}`, {
+                    method: 'PUT',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(payload)
+                });
+            } else {
+                // Create
+                await fetch(API_URL, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(payload)
+                });
+            }
+
+            form.reset();
+            document.getElementById('mahasiswa-id').value = '';
+            loadMahasiswa();
+        });
+
+        // Load data awal
+        loadMahasiswa();
+    </script>
+</body>
+
+</html>
